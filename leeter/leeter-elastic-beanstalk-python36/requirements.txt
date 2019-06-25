@@ -1,0 +1,4 @@
+requests
+flask
+boto3
+aws-xray-sdk

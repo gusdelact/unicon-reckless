@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Deploy a unicorn-service-swapcaser with a SAM template
+
+Resources:
+  APIHandler:
+    Properties:
+      FunctionName: swapcaser
+      CodeUri: ./service-swapcaser.zip
+      Handler: app.app
+      MemorySize: 128
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/TeamRole
+      Runtime: python3.6
+      Tracing: Active
+      Timeout: 3
+    Type: AWS::Serverless::Function
+  
+  APIHandlerInvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: APIHandler
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+        - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+        - RestAPIId:
+            Ref: RestAPI
+    Type: AWS::Lambda::Permission
+  
+  RestAPI:
+    Properties:
+      DefinitionBody:
+        definitions:
+          Empty:
+            title: Empty Schema
+            type: object
+        info:
+          title: unicorn-service-swapcase
+          version: '1.0'
+        paths:
+          /:
+            get:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                contentHandling: CONVERT_TO_TEXT
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                responses:
+                  default:
+                    statusCode: '200'
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APIHandler.Arn}/invocations
+            post:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              x-amazon-apigateway-integration:
+                contentHandling: CONVERT_TO_TEXT
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                responses:
+                  default:
+                    statusCode: '200'
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APIHandler.Arn}/invocations
+        schemes:
+        - https
+        swagger: '2.0'
+      StageName: api
+    Type: AWS::Serverless::Api
+
+Outputs:
+  APIHandlerArn:
+    Value:
+      Fn::GetAtt:
+      - APIHandler
+      - Arn
+  APIHandlerName:
+    Value:
+      Ref: APIHandler
+  EndpointURL:
+    Value:
+      Fn::Sub: https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/api/
+  RestAPIId:
+    Value:
+      Ref: RestAPI
