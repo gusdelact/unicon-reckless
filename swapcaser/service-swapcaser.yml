@@ -8,11 +8,11 @@ Resources:
       FunctionName: swapcaser
       CodeUri: ./service-swapcaser.zip
       Handler: app.app
-      MemorySize: 128
+      MemorySize: 3008
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/TeamRole
       Runtime: python3.6
       Tracing: Active
-      Timeout: 3
+      Timeout: 300
     Type: AWS::Serverless::Function
   
   APIHandlerInvokePermission:
