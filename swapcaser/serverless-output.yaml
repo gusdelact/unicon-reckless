@@ -18,7 +18,7 @@ Outputs:
 Resources:
   APIHandler:
     Properties:
-      CodeUri: s3://reckless-endangerment-lambda-bucket/2dd7f49f2a75d4ffc9e4d7783ea2c30b
+      CodeUri: s3://reckless-endangerment-lambda-bucket/18c111421a341915fa4dbb4ad704131b
       FunctionName: swapcaser
       Handler: app.app
       MemorySize: 128

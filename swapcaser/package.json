@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "do-it": "rm service-swapcaser.zip && zip service-swapcaser.zip -r service-swapcaser && npm run package && npm run deploy",
+    "rezip": "rm -rf service-swapcaser.zip && cd service-swapcaser && zip service-swapcaser.zip -r * && mv service-swapcaser.zip ../ && cd ../",
+    "do-it": "npm run rezip && npm run package && npm run deploy",
     "package": "aws cloudformation package --template-file service-swapcaser.yml --s3-bucket reckless-endangerment-lambda-bucket --output-template serverless-output.yaml",
     "deploy": "aws cloudformation deploy --template-file serverless-output.yaml --stack-name swapcaser"
   },
