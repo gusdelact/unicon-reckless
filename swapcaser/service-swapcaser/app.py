@@ -73,21 +73,45 @@ def index():
         response = {'Message':'','Signature':[]}
         message = messageRequest['Message']
         json_log("Message sent to swapcase service", attrs=request.json_body)
-        try:
-            subsegment = xray_recorder.begin_subsegment('external_request')
-            req = requests.post(SWAPCASESERVICE, json={'Message':messageRequest['Message']}, timeout=2)
-            xray_recorder.put_annotation('external_service_body', req.text)
-            xray_recorder.put_annotation('call_external_service', req.status_code)
-            xray_recorder.end_subsegment()
+        # try:
+            # subsegment = xray_recorder.begin_subsegment('external_request')
+            # req = requests.post(SWAPCASESERVICE, json={'Message':messageRequest['Message']}, timeout=2)
+
+        message = messageRequest['Message'].swapcase();
+
+            # xray_recorder.put_annotation('external_service_body', req.text)
+            # xray_recorder.put_annotation('call_external_service', req.status_code)
+        xray_recorder.end_subsegment()
             #The external service may require anothey key soon, as below.
             #req = requests.post(SWAPCASE_SERVICE, json={'Message':messageRequest['Message'],'ApiVersion':'2'}).json()
-        except requests.exceptions.Timeout:
-            #request took over 2 seconds, lets try again and hope not to go over 3 second lambda duration
-            #SWAPCASESERVICE ApiVersion 1 sometimes takes up to 8 seconds
-            json_log("External service took over 2 seconds. Retrying. By default swapcaser lambda has max 3 second runtime.",status='warning',attrs=request.json_body)
-            req = requests.post(SWAPCASESERVICE, json={'Message':messageRequest['Message']})
-        if req.status_code != 200:
-            json_log('External service 500: Inspect "external_request" trace in AWS Xray','error', request.json_body)
-        req.raise_for_status()
-        req = req.json()
+        # except requests.exceptions.Timeout:
+        #     #request took over 2 seconds, lets try again and hope not to go over 3 second lambda duration
+        #     #SWAPCASESERVICE ApiVersion 1 sometimes takes up to 8 seconds
+        #     json_log("External service took over 2 seconds. Retrying. By default swapcaser lambda has max 3 second runtime.",status='warning',attrs=request.json_body)
+        #     req = requests.post(SWAPCASESERVICE, json={'Message':messageRequest['Message']})
+        # if req.status_code != 200:
+        #     json_log('External service 500: Inspect "external_request" trace in AWS Xray','error', request.json_body)
+        # req.raise_for_status()
+        # req = req.json()
+        json_log("Swapcase service request complete", attrs=request.json_body)
+        response['Message'] = TEAMID+message
+        response['Signature'] = sign(HASH, response['Message']) #Sign message with my team hash (or HASH)
+        json_log("Response from sign function {}\n".format(repr(response)), attrs=response)
+        return response
+
+    elif request.method == 'GET':
+        xray_recorder.put_annotation("url", "/");
+        xray_recorder.put_annotation("method", "GET");
+        #     json_log('External service 500: Inspect "external_request" trace in AWS Xray','error', request.json_body)
+        # req.raise_for_status()
+        # req = req.json()
+        json_log("Swapcase service request complete", attrs=request.json_body)
+        response['Message'] = TEAMID+message
+        response['Signature'] = sign(HASH, response['Message']) #Sign message with my team hash (or HASH)
+        json_log("Response from sign function {}\n".format(repr(response)), attrs=response)
+        return response
+
+    elif request.method == 'GET':
+        xray_recorder.put_annotation("url", "/");
+        xray_recorder.put_annotation("method", "GET");
         return {'Status': 'OK'}
